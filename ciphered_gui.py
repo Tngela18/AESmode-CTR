@@ -16,13 +16,13 @@ import serpent
 os.environ['PYRO_LOGLEVEL'] = 'DEBUG'
 
 iv=os.urandom(16)
-salt=b'hello'
+salt=b"hello"
 #Initialisation de la fonction de dérivation de clé
 kdf=PBKDF2HMAC(
     algorithm=hashes.SHA256(),
     length=16, #taille de la clef
     salt=salt, # donnée qui hache le mot de passe
-    iterations=180000
+    iterations=480000
 )
 
 class CipheredGUI(BasicGUI):
