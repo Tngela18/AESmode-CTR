@@ -70,7 +70,7 @@ class FernetGUI(CipheredGUI):
         # Decrypt the message and return it as a UTF-8 string
         decrypted_message = fernet_cipher.decrypt(encrypted_message).decode('utf-8')
         #return str(decrypted_message.decode('utf-8'))
-        return (decrypted_message)
+        return str(decrypted_message)
         
     
         
