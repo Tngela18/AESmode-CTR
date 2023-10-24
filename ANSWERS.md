@@ -10,7 +10,13 @@
 4) Il manque la proprieté de l'authenticité
 
     AUTHENTICATED SYMETRIC ENCRYPTION
-1) Fernet est moins risqué car il permet un dechiffrement avec la clé donc presque impossible pour un serveur malveillant d'intercepter le message
-2) cette attaque est le DDOS (DDistributed Denial Of Service)
+1) Fernet est moins risqué car il offre à la fois la confidentialité et l'authenticité
+2) cette attaque est le rejeu d'attaque
 3) la methode que l'on peut mettre en oeuvre pour eviter celà est d'allouer un certain temps au message pour que ce dernier ne soit pas réutilisable
 
+    TTL
+1) oui, je remarque que le message a une durée de vie de 30s
+2)lorsqu'on soustrait 45 au temps d'emission (45-30=-15), le message sera considéré comme expiré et on ne pourra pas le dechiffer
+3) Non, ce n'est pas efficace pour se proteger de l'attaque précedente
+4)Si le délai soustrait au temps lors de l'émission est négatif, cela peut rendre le message inutilisable
+5) temps d'attente

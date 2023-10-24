@@ -9,28 +9,39 @@ class TimeFernetGUI(FernetGUI):
         super().__init__()
 
 
-    def encrypt(self, message):
-        
-        # Initialize the Fernet cipher with the derived key
-        fernet_cipher = Fernet(self._key)
-        
-        
-        # Encrypt the message and return it as bytes
+    def encrypt_at_time(self, message, key, ttl=30):
+        current_time = int(time.time())
+        fernet_cipher = Fernet(key)
         encrypted_message = fernet_cipher.encrypt(message.encode('utf-8'))
-        #encrypted_message = fernet_cipher.encrypt(bytes(message,'utf-8'))
-        return (encrypted_message, 0)
+        return f"{current_time + ttl}:{encrypted_message.decode('utf-8')}"
 
-    def decrypt(self, encrypted_message):
+    def decrypt_at_time(self, token, key):
+        parts = token.split(":")
+        if len(parts) != 2:
+            raise InvalidToken("Invalid token format")
+        expiration_time = int(parts[0])
+        current_time = int(time.time())
+        if current_time > expiration_time:
+            raise InvalidToken("Token has expired")
+        fernet_cipher = Fernet(key)
+        decrypted_message = fernet_cipher.decrypt(parts[1].encode('utf-8')).decode('utf-8')
+        return decrypted_message
 
-        # Initialize the Fernet cipher with the derived key
-        fernet_cipher = Fernet(self._key)
-        
-        # Decrypt the message and return it as a UTF-8 string
-        decrypted_message = fernet_cipher.decrypt(encrypted_message[0])
-        return str(decrypted_message.decode('utf-8'))
-        #return (decrypted_message,'utf-8')
+    def encrypt(self, mess):
+        try:
+            encrypted_message = self.encrypt_at_time(mess, self._key, ttl=30)
+            return encrypted_message
+        except InvalidToken as e:
+            # Log the error
+            print(f"Encryption Error: {str(e)}")
 
-
+    def decrypt(self, mess):
+        try:
+            decrypted_message = self.decrypt_at_time(mess, self._key)
+            return decrypted_message
+        except InvalidToken as e:
+            # Log the error
+            print(f"Decryption Error: {str(e)}")
 
 
 if __name__ == "__main__":

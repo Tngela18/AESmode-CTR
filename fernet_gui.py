@@ -25,7 +25,7 @@ class FernetGUI(CipheredGUI):
         # Convert the password to bytes (UTF-8 encoding is used here)
         
         password_bytes =(bytes(password, "utf-8"))
-
+    
 
         # Use SHA-256 hash function to create a 256-bit key
         #sha256 = hashlib.sha256()
