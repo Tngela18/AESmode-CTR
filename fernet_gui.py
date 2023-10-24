@@ -37,8 +37,6 @@ class FernetGUI(CipheredGUI):
         #return str(decrypted_message.decode('utf-8'))
         return (decrypted_message,'utf-8')
         
-
-
     #def run_chat(self, sender, app_data,password):
         
     def run_chat(self, sender, app_data):  

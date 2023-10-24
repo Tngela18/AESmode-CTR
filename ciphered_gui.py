@@ -91,7 +91,7 @@ class CipheredGUI(BasicGUI):
         decrypted_data = decryptor.update(remess[0]) +decryptor.finalize()
         return str(decrypted_data, "utf-8")
 
-    
+
 
     def recv(self)->None:
         # function called to get incoming messages and display them
