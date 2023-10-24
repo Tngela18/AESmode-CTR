@@ -7,9 +7,11 @@ from generic_callback import GenericCallback
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from basic_gui import *
 import os
 import logging
 import serpent
+
 
 os.environ['PYRO_LOGLEVEL'] = 'DEBUG'
 
@@ -23,32 +25,15 @@ kdf=PBKDF2HMAC(
     iterations=180000
 )
 
-
-# default values used to populate connection window
-DEFAULT_VALUES = {
-    "host" : "127.0.0.1",
-    "port" : "6666",
-    "name" : "foo"
-    
-}
-
-class CipheredGUI:
+class CipheredGUI(BasicGUI):
     """
     GUI for a chat client. Not so secured.
     """
     def __init__(self)->None:
         # constructor
-        self._client = None
-        self._callback = None
-        self._log = logging.getLogger(self.__class__.__name__)
         self._key= None 
-
-    def _create_chat_window(self)->None:
-        # chat windows
-        # known bug : the add_input_text do not display message in a user friendly way
-        with dpg.window(label="Chat", pos=(0, 0), width=800, height=600, show=False, tag="chat_windows", on_close=self.on_close):
-            dpg.add_input_text(default_value="Readonly\n\n\n\n\n\n\n\nfff", multiline=True, readonly=True, tag="screen", width=790, height=525)
-            dpg.add_input_text(default_value="some text", tag="input", on_enter=True, callback=self.text_callback, width=790)
+        self._callback = None 
+        self._log = logging.getLogger(self.__class__.__name__) 
 
     def _create_connection_window(self)->None:
         # windows about connexion
@@ -62,44 +47,10 @@ class CipheredGUI:
                 dpg.add_text("password") # Ajout de texte password
                 dpg.add_input_text(default_value = "", tag="connection_password",password=True) # Ajout de l'input password 
 
-            
             dpg.add_button(label="Connect", callback=self.run_chat)
 
-    def _create_menu(self)->None:
-        # menu (file->connect)
-        with dpg.viewport_menu_bar():
-            with dpg.menu(label="File"):
-                dpg.add_menu_item(label="Connect", callback=self.connect)
 
-    def create(self):
-        # create the context and all windows
-        dpg.create_context()
-
-        self._create_chat_window()
-        self._create_connection_window()
-        self._create_menu()        
-            
-        dpg.create_viewport(title='Secure chat - or not', width=800, height=600)
-        dpg.setup_dearpygui()
-        dpg.show_viewport()
-
-    def update_text_screen(self, new_text:str)->None:
-        # from a nex_text, add a line to the dedicated screen text widget
-        text_screen = dpg.get_value("screen")
-        text_screen = text_screen + "\n" + new_text
-        dpg.set_value("screen", text_screen)
-
-    def text_callback(self, sender, app_data)->None:
-        # every time a enter is pressed, the message is gattered from the input line
-        text = dpg.get_value("input")
-        self.update_text_screen(f"Me: {text}")
-        self.send(text)
-        dpg.set_value("input", "")
-
-    def connect(self, sender, app_data)->None:
-        # callback used by the menu to display connection windows
-        dpg.show_item("connection_windows")
-
+    
     def run_chat(self, sender, app_data)->None:
         # callback used by the connection windows to start a chat session
         host = dpg.get_value("connection_host")
@@ -118,31 +69,29 @@ class CipheredGUI:
         dpg.hide_item("connection_windows")
         dpg.show_item("chat_windows")
         dpg.set_value("screen", "Connecting")
+        
 
     def encrypt(self,mess): #fonction encrypt qui prend en parametre une valeur string
         #iv=os.urandom(16) (nombre aléatoire) Vecteur d'initialisation qui peut etre utiliseé avec une clef secrète pour le chiffrement des données afin de déjouer les cyberattaques
         
         cipher= Cipher(algorithms.AES(self._key),modes.CTR(iv))
         encryptor=cipher.encryptor()
-        remess=encryptor.update(bytes(mess,"utf-8"))
+        remess=encryptor.update(bytes(mess,"utf-8"))+ encryptor.finalize()
         return(remess,iv) # Retourne un tuple de bytes
 
     def decrypt(self,remess): #fonction decrypt qui prend en paramètre un tuple
         
       
     # Concatenate the elements of the tuple into a bytes-like object
-        data_to_decrypt = b''.join(remess)
-        
+        #data_to_decrypt = b''.join(remess)
+        iv=remess[1]
         cipher = Cipher(algorithms.AES(self._key), modes.CTR(iv))
         decryptor = cipher.decryptor()
-        decrypted_data = decryptor.update(data_to_decrypt)
-        return decrypted_data
+        #decrypted_data = decryptor.update(data_to_decrypt)
+        decrypted_data = decryptor.update(remess[0]) +decryptor.finalize()
+        return str(decrypted_data, "utf-8")
 
-    def on_close(self):
-        # called when the chat windows is closed
-        self._client.stop()
-        self._client = None
-        self._callback = None
+    
 
     def recv(self)->None:
         # function called to get incoming messages and display them
@@ -156,17 +105,7 @@ class CipheredGUI:
     def send(self, texte)->None:
         # function called to send a message to all (broadcasting)
         mess=self.encrypt(texte) #Faire appel à ma fonction encrypt pour chiffrer le texte
-        self._client.send_message(mess) #J'envoie ce texte chiffré à un client x 
-
-    def loop(self):
-        # main loop
-        while dpg.is_dearpygui_running():
-            self.recv()
-            dpg.render_dearpygui_frame()
-
-        dpg.destroy_context()
-
-
+        self._client.send_message(mess) #J'envoie ce texte chiffré à un client x     
 
 
 if __name__ == "__main__":
@@ -175,4 +114,4 @@ if __name__ == "__main__":
     # instanciate the class, create context and related stuff, run the main loop
     client = CipheredGUI()
     client.create()
-    client.loop()
+    client.loop()        

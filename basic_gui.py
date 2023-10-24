@@ -125,6 +125,7 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
 
     # instanciate the class, create context and related stuff, run the main loop
+    #client=CipheredGUI()
     client = BasicGUI()
     client.create()
     client.loop()
